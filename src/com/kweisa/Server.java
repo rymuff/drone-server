@@ -1,40 +1,62 @@
 package com.kweisa;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.util.encoders.Hex;
+
+import javax.crypto.KeyAgreement;
+import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.ServerSocket;
-import java.net.Socket;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
+import java.security.*;
+import java.security.spec.ECGenParameterSpec;
+import java.security.spec.InvalidKeySpecException;
 
 public class Server {
     private ServerSocket serverSocket;
 
     public Server(int port) throws IOException {
-        serverSocket = new ServerSocket(port);
+//        serverSocket = new ServerSocket(port);
     }
 
-    public void run() throws IOException {
-        Socket socket = serverSocket.accept();
-        InetAddress inetAddress = socket.getInetAddress();
-        System.out.println(inetAddress.getHostAddress());
+    public void run() throws IOException, NoSuchProviderException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, NoSuchPaddingException, InvalidKeyException, InvalidKeySpecException {
+//        Socket socket = serverSocket.accept();
+//        InetAddress inetAddress = socket.getInetAddress();
+//        System.out.println(inetAddress.getHostAddress());
+//
+//        DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
+//        DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
+//
+//        byte[] randomNumberClient = new byte[4];
+//        dataInputStream.read(randomNumberClient);
+//        Log.d("<-RNc", randomNumberClient);
+//
+//        byte[] randomNumberServer = generateRandomNumber(4);
+//        dataOutputStream.write(randomNumberServer);
+//        Log.d("RNs->", randomNumberServer);
+//
+//        dataInputStream.close();
+//        dataOutputStream.close();
+//        socket.close();
+        Security.addProvider(new BouncyCastleProvider());
 
-        DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
-        DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("ECDH", BouncyCastleProvider.PROVIDER_NAME);
+        keyPairGenerator.initialize(new ECGenParameterSpec("secp256r1"));
 
-        byte[] randomNumberClient = new byte[4];
-        dataInputStream.read(randomNumberClient);
-        Log.d("<-RNc", randomNumberClient);
+        KeyAgreement aKeyAgree = KeyAgreement.getInstance("ECDH", "BC");
+        KeyAgreement bKeyAgree = KeyAgreement.getInstance("ECDH", "BC");
+        KeyPair aKeyPair = keyPairGenerator.generateKeyPair();
+        KeyPair bKeyPair = keyPairGenerator.generateKeyPair();
 
-        byte[] randomNumberServer = generateRandomNumber(4);
-        dataOutputStream.write(randomNumberServer);
-        Log.d("RNs->", randomNumberServer);
+        aKeyAgree.init(aKeyPair.getPrivate());
+        bKeyAgree.init(bKeyPair.getPrivate());
 
-        dataInputStream.close();
-        dataOutputStream.close();
-        socket.close();
+        aKeyAgree.doPhase(bKeyPair.getPublic(), true);
+        bKeyAgree.doPhase(aKeyPair.getPublic(), true);
+
+//        PublicKey publicKey = KeyFactory.getInstance("ECDH").generatePublic(new X509EncodedKeySpec(publicKeyBytes));
+
+        System.out.println(Hex.toHexString(aKeyAgree.generateSecret()));
+        System.out.println(Hex.toHexString(bKeyAgree.generateSecret()));
     }
 
     public byte[] generateRandomNumber(int numBytes) {
@@ -56,7 +78,7 @@ public class Server {
         return sb.toString();
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, NoSuchProviderException, InvalidKeyException, NoSuchPaddingException, InvalidKeySpecException {
         Server server = new Server(10002);
         server.run();
     }

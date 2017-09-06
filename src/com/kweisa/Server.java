@@ -1,38 +1,32 @@
 package com.kweisa;
 
 import com.kweisa.certificate.Certificate;
+import com.kweisa.certificate.CertificateAuthority;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.security.*;
-import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.Security;
 
 public class Server {
     private ServerSocket serverSocket;
 
     private Certificate certificate;
-    private PrivateKey privateKey;
+    private CertificateAuthority certificateAuthority;
 
     public Server(int port) throws IOException {
         serverSocket = new ServerSocket(port);
     }
 
-    public void load(String certificateFileName, String privateKeyFileName) throws Exception {
-        Security.addProvider(new BouncyCastleProvider());
-        certificate = Certificate.read(certificateFileName);
-
-        FileInputStream fileInputStream = new FileInputStream(privateKeyFileName);
-        byte[] bytes = new byte[fileInputStream.available()];
-        fileInputStream.read(bytes);
-        fileInputStream.close();
-
-        privateKey = KeyFactory.getInstance("EC").generatePrivate(new PKCS8EncodedKeySpec(bytes));
+    public void load(String certificateFileName, String privateKeyFileName, String caKeyFileName) throws Exception {
+        certificate = Certificate.read(certificateFileName, privateKeyFileName);
+        certificateAuthority = CertificateAuthority.read(caKeyFileName);
     }
 
     public void run() throws Exception {
@@ -57,6 +51,8 @@ public class Server {
         Log.d("<-CERTc", certificate);
 
         Certificate clientCertificate = new Certificate(certificate);
+        System.out.println(certificateAuthority.verifyCertificate(clientCertificate));
+
 
         dataInputStream.close();
         dataOutputStream.close();
@@ -76,15 +72,11 @@ public class Server {
         return bytes;
     }
 
-    public static String byteArrayToHex(byte[] a) {
-        StringBuilder sb = new StringBuilder(a.length * 2);
-        for (byte b : a)
-            sb.append(String.format("%02x", b));
-        return sb.toString();
-    }
-
     public static void main(String[] args) throws Exception {
+        Security.addProvider(new BouncyCastleProvider());
+
         Server server = new Server(10002);
+        server.load("server.cert", "server.key", "ca.keypair");
         server.run();
     }
 }

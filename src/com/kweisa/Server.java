@@ -58,9 +58,6 @@ public class Server {
 
         Certificate clientCertificate = new Certificate(certificate);
 
-
-
-
         dataInputStream.close();
         dataOutputStream.close();
         socket.close();

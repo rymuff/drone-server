@@ -82,9 +82,6 @@ public class Server {
         SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2withHmacSHA1", BouncyCastleProvider.PROVIDER_NAME);
         secretKey = secretKeyFactory.generateSecret(new PBEKeySpec(new String(preMasterSecret).toCharArray(), salt, 1024, 128));
         Log.d("KEY", secretKey.getEncoded());
-
-//        dataInputStream.close();
-//        dataOutputStream.close();
     }
 
     public void close() throws Exception {

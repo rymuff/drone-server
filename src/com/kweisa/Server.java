@@ -53,8 +53,7 @@ public class Server {
         dataOutputStream.write(randomNumberServer);
         Log.d("RNs->", randomNumberServer);
 
-
-        byte[] certificateBytes = new byte[dataInputStream.available()];
+        byte[] certificateBytes = new byte[dataInputStream.readInt()];
         dataInputStream.read(certificateBytes);
         Log.d("<-CERTc", certificateBytes);
 

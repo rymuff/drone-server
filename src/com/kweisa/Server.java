@@ -129,7 +129,7 @@ public class Server {
         server.load("server.cert", "server.key", "ca.keypair");
         server.handshake();
 
-        Log.d("Result", server.read());
+//        Log.d("Result", server.read());
 
         server.close();
     }

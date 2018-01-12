@@ -127,7 +127,6 @@ public class Server {
         server.load("server.cert", "server.key", "ca.keypair");
         server.handshake();
 
-//        Log.d("Result", server.read());
         String url = "http://115.145.171.25:5459/auth2.php?id=2";
         URL obj = new URL(url);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();

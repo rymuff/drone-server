@@ -79,6 +79,9 @@ public class Server {
         SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2withHmacSHA1", BouncyCastleProvider.PROVIDER_NAME);
         secretKey = secretKeyFactory.generateSecret(new PBEKeySpec(new String(preMasterSecret).toCharArray(), salt, 1024, 128));
         Log.d("KEY", secretKey.getEncoded());
+
+        dataInputStream.close();
+        dataOutputStream.close();
     }
 
     public void close() throws Exception {
@@ -123,9 +126,14 @@ public class Server {
     public static void main(String[] args) throws Exception {
         Security.addProvider(new BouncyCastleProvider());
 
-        Server server = new Server(10002);
+        for (String arg : args) {
+            System.out.println(arg);
+        }
+
+        Server server = new Server(Integer.parseInt(args[0]));
         server.load("server.cert", "server.key", "ca.keypair");
         server.handshake();
+        server.close();
 
         String url = "http://115.145.171.25:5459/auth2.php?id=2";
         URL obj = new URL(url);
@@ -134,7 +142,5 @@ public class Server {
         int responseCode = con.getResponseCode();
         System.out.println("\nSending 'GET' request to URL : " + url);
         System.out.println("Response Code : " + responseCode);
-
-        server.close();
     }
 }
